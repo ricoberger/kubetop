@@ -22,7 +22,7 @@ sudo install -m 755 kubetop-$GOOS-$GOARCH /usr/local/bin/kubetop
 
 ## Usage
 
-kubetop two main entrypoint. The first one is the `pods` view, which shows the ressources of all running pods in the cluster. The second one is the `nodes` view which shows the ressources of all running nodes in the cluster. By selecting a node in the nodes view you get an overview of all running pods on this node. When you select a pod you get some details about this pod, like events and logs.
+kubetop has two entrypoints. The first one is the `pods` view, which shows the ressources of all running pods in the cluster. The second one is the `nodes` view which shows the ressources of all running nodes in the cluster. By selecting a node in the nodes view you get an overview of all running pods on this node. When you select a pod you get some details about this pod, like events and logs.
 
 ```
 Display Resource (CPU/Memory/Storage) usage of pods
