@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "go",
+      "request": "launch",
+      "name": "kubetop",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/kubetop",
+      "env": {},
+      "args": [
+        "--kubeconfig=${workspaceFolder}/kubeconfig"
+      ]
+    }
+  ]
+}
