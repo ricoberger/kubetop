@@ -213,11 +213,11 @@ func (p *PodDetailsWidget) Update() error {
 			strings[i][1] = fmt.Sprintf("%d", container.Restarts)
 			strings[i][2] = container.Status
 			strings[i][3] = fmt.Sprintf("%dm", container.CPU)
-			strings[i][4] = fmt.Sprintf("%dm", container.CPUMin)
-			strings[i][5] = fmt.Sprintf("%dm", container.CPUMax)
+			strings[i][4] = helpers.RenderCPUMax(container.CPUMin, 1, 1)
+			strings[i][5] = helpers.RenderCPUMax(container.CPUMax, 1, 1)
 			strings[i][6] = helpers.FormatBytes(container.Memory)
-			strings[i][7] = helpers.FormatBytes(container.MemoryMin)
-			strings[i][8] = helpers.FormatBytes(container.MemoryMax)
+			strings[i][7] = helpers.RenderMemoryMax(container.MemoryMin, 1, 1)
+			strings[i][8] = helpers.RenderMemoryMax(container.MemoryMax, 1, 1)
 		}
 
 		p.containers.Rows = strings
