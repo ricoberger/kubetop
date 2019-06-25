@@ -46,19 +46,19 @@ Use "kubetop [command] --help" for more information about a command.
 
 The following keys can be used for the navigation in kubetop.
 
-| Key | Action |
-| --- | ------ |
-| `q`, `<C-c>` | Quit kubetop |
-| `k`, `<Up>`, `<MouseWheelUp>` | Scroll up (pods, nodes, logs) |
-| `j`, `<Down>`, `<MouseWheelDown>` | Scroll down (pods, nodes, logs) |
-| `<Tab>` | Select next container |
-| `p` | Pause updating data |
-| `<Enter>` | Select (pod, node, sortorder, filter) |
-| `<Escape>` | Cancle (pod details, sortorder, filter) |
-|  `<F1>` | Select sortorder |
-|  `<F2>` | Select namespace filter |
-|  `<F3>` | Select node filter |
-|  `<F4>` | Select status filter |
+| Key | Nodes | Pods | Pod Details |
+| --- | ----- | ---- | ----------- |
+| `q`, `<C-c>` | Quit | Quit | Quit |
+| `k`, `<Up>`, `<MouseWheelUp>` | Scroll up through nodes | Scroll up through pods | Scroll up through logs |
+| `j`, `<Down>`, `<MouseWheelDown>` | Scroll down through nodes | Scroll down through pods | Scroll down through logs |
+| `<Tab>` | - | - | Select next container |
+| `p` | Pause updating data | Pause updating data | Pause updating data |
+| `<Enter>` | Select node / Apply selected sortorder | Select pod / Apply selected sortorder/filter | - |
+| `<Escape>` | Close sortorder modal | Close sortorder/filter modal | Go back to the pods view |
+|  `<F1>` | Show available sortorder | Show available sortorder | - |
+|  `<F2>` | - | Show namespace filter | - |
+|  `<F3>` | - | Show node filter | - |
+|  `<F4>` | - | Show status filter | - |
 
 ## Dependencies
 
