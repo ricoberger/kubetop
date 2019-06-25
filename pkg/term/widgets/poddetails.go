@@ -3,6 +3,7 @@ package widgets
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/ricoberger/kubetop/pkg/api"
 	"github.com/ricoberger/kubetop/pkg/term/helpers"
@@ -135,6 +136,9 @@ func (p *PodDetailsWidget) Update() error {
 		}
 
 		// Render the first section of pod details: name, namespace, node, controlled by
+		// First we create our string for the controlled by field.
+		// Then we create our string for the events.
+		// We render a maximum amount of five events, sorted by the timestamp (timestamp is the time when the event was fired the last time).
 		var controlledBy string
 		for index, controller := range pod.ControlledBy {
 			if index == 0 {
@@ -144,12 +148,20 @@ func (p *PodDetailsWidget) Update() error {
 			}
 		}
 
+		sort.SliceStable(pod.Events, func(i, j int) bool {
+			return pod.Events[i].Timestamp > pod.Events[j].Timestamp
+		})
+
 		var events string
 		for index, event := range pod.Events {
+			if index == 5 {
+				break
+			}
+
 			if index == 0 {
-				events = events + event.Message
+				events = events + time.Unix(event.Timestamp, 0).Format("Mon, 02 Jan 2006 15:04:05 -0700") + ": " + event.Message
 			} else {
-				events = events + "\n               " + event.Message
+				events = events + "\n               " + time.Unix(event.Timestamp, 0).Format("Mon, 02 Jan 2006 15:04:05 -0700") + ": " + event.Message
 			}
 		}
 
