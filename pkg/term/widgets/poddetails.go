@@ -250,7 +250,7 @@ func (p *PodDetailsWidget) Update() error {
 		termWidth, termHeight := ui.TerminalDimensions()
 		minHeight := 8
 		detailsHeight := 11
-		podDetails1Height := 8 + len(pod.ControlledBy) + len(pod.Events)
+		podDetails1Height := 8 + len(pod.ControlledBy) + helpers.MinInt(len(pod.Events), 5)
 		if len(pod.ControlledBy) > 0 {
 			podDetails1Height--
 		}
