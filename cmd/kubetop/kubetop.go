@@ -20,8 +20,8 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:   "kubetop",
-	Short: "Display Resource (CPU/Memory/Storage) usage of pods",
-	Long:  "Display Resource (CPU/Memory/Storage) usage of pods",
+	Short: "Display Resource (CPU/Memory/Storage) usage of nodes and pods",
+	Long:  "Display Resource (CPU/Memory/Storage) usage of nodes and pods",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Initialize Kubernetes API client.
 		client, err := api.NewClient(kubeconfig)
@@ -82,8 +82,33 @@ var nodesCmd = &cobra.Command{
 	},
 }
 
+var podsCmd = &cobra.Command{
+	Use:   "pods",
+	Short: "Display Resource (CPU/Memory/Storage) usage of pods",
+	Long:  "Display Resource (CPU/Memory/Storage) usage of pods",
+	Run: func(cmd *cobra.Command, args []string) {
+		// Initialize Kubernetes API client.
+		client, err := api.NewClient(kubeconfig)
+		if err != nil {
+			log.Fatalf("Failed to initialize API client: %#v", err)
+		}
+
+		// Initialize and run the terminal user interface for kubetop.
+		t := term.Term{
+			APIClient: client,
+			ViewType:  widgets.ViewTypePods,
+		}
+
+		err = t.Run(api.Filter{Namespace: namespace, Node: "", Status: 10})
+		if err != nil {
+			log.Fatalf("Failed to initialize ui: %#v", err)
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(nodesCmd)
+	rootCmd.AddCommand(podsCmd)
 	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.PersistentFlags().StringVar(&kubeconfig, "kubeconfig", "", "Path to the kubeconfig file to use for CLI requests")
