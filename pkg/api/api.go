@@ -71,14 +71,15 @@ func getPodMetrics(name string, metrics []mev1beta1.PodMetrics) *mev1beta1.PodMe
 	return nil
 }
 
-// getNode returns a node by his name.
-func (c *Client) getNode(name string) (*v1.Node, error) {
-	node, err := c.clientset.CoreV1().Nodes().Get(name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
+// getNodeMetrics returns the metrics for a node by the provided name from a slice of node metrics.
+func getNodeMetrics(name string, metrics []mev1beta1.NodeMetrics) *mev1beta1.NodeMetrics {
+	for _, metric := range metrics {
+		if metric.Name == name {
+			return &metric
+		}
 	}
 
-	return node, nil
+	return nil
 }
 
 // NewClient initialize our client for Kubernetes.
@@ -158,32 +159,39 @@ func (c *Client) GetNodesMetrics(sortorder Sort) ([]Node, error) {
 	var nodes []Node
 	var nodeMetricsList mev1beta1.NodeMetricsList
 
-	// Get the metrics data for all nodes from the Kubernetes API.
-	// Unmarshal the data into the nodeMetricsList slice.
-	data, err := c.clientset.RESTClient().Get().AbsPath("apis/metrics.k8s.io/v1beta1/nodes").DoRaw()
+	// Get all nodes.
+	nodesList, err := c.clientset.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.Unmarshal(data, &nodeMetricsList)
-	if err != nil {
-		return nil, err
+	// Get the metrics data for all nodes from the Kubernetes API.
+	// Unmarshal the data into the nodeMetricsList slice.
+	// We ignore if there is an error during the API call, because we only will lost the values for the total amount of memory and the used cpu.
+	data, err := c.clientset.RESTClient().Get().AbsPath("apis/metrics.k8s.io/v1beta1/nodes").DoRaw()
+	if err == nil {
+		err = json.Unmarshal(data, &nodeMetricsList)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Iterate over each node and populate our custom node structure.
 	// To get the external and internal ip addess of a node we also call the node API endpoint per node.
 	// After that we select all pods for a node by the 'spec.nodeName' label of the pods.
 	// The pod data is not used yet, we only rely on the lenght of the slice for the number of pods per node.
-	for _, item := range nodeMetricsList.Items {
-		node, err := c.getNode(item.Name)
-		if err != nil {
-			return nil, err
+	for _, item := range nodesList.Items {
+		var memoryUsed, cpuUsed int64
+		nodeMetrics := getNodeMetrics(item.Name, nodeMetricsList.Items)
+		if nodeMetrics != nil {
+			memoryUsed = nodeMetrics.Usage.Memory().Value()
+			cpuUsed = nodeMetrics.Usage.Cpu().MilliValue()
 		}
 
 		var externalIP string
 		var internalIP string
 
-		for _, addr := range node.Status.Addresses {
+		for _, addr := range item.Status.Addresses {
 			if addr.Type == v1.NodeExternalIP {
 				externalIP = addr.Address
 			}
@@ -193,20 +201,21 @@ func (c *Client) GetNodesMetrics(sortorder Sort) ([]Node, error) {
 			}
 		}
 
+		var podsCount int
 		pods, err := c.clientset.CoreV1().Pods("").List(metav1.ListOptions{
 			FieldSelector: "spec.nodeName=" + item.Name,
 		})
-		if err != nil {
-			return nil, err
+		if err == nil {
+			podsCount = len(pods.Items)
 		}
 
 		nodes = append(nodes, Node{
 			Name:        item.Name,
-			PodsCount:   len(pods.Items),
-			MemoryTotal: node.Status.Allocatable.Memory().Value(),
-			MemoryUsed:  item.Usage.Memory().Value(),
-			CPUTotal:    node.Status.Allocatable.Cpu().MilliValue(),
-			CPUUsed:     item.Usage.Cpu().MilliValue(),
+			PodsCount:   podsCount,
+			MemoryTotal: item.Status.Allocatable.Memory().Value(),
+			MemoryUsed:  memoryUsed,
+			CPUTotal:    item.Status.Allocatable.Cpu().MilliValue(),
+			CPUUsed:     cpuUsed,
 			ExternalIP:  externalIP,
 			InternalIP:  internalIP,
 		})
@@ -252,18 +261,6 @@ func (c *Client) GetPodsMetrics(filter Filter, sortorder Sort) ([]Pod, error) {
 	var pods []Pod
 	var podMetrics mev1beta1.PodMetricsList
 
-	// Get the metrics data for all nodes from the Kubernetes API.
-	// Unmarshal the data into the podMetrics slice.
-	data, err := c.clientset.RESTClient().Get().AbsPath("apis/metrics.k8s.io/v1beta1/pods").DoRaw()
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(data, &podMetrics)
-	if err != nil {
-		return nil, err
-	}
-
 	// Get all the pods a second time from the Kubernetes API.
 	// This is needed because the metrics endpoint does not return all needed data.
 	// If the node filter is not empty we apply the field selector 'spec.nodeName' to only get pods on the specified node.
@@ -278,6 +275,17 @@ func (c *Client) GetPodsMetrics(filter Filter, sortorder Sort) ([]Pod, error) {
 	podsList, err := c.clientset.CoreV1().Pods(filter.Namespace).List(options)
 	if err != nil {
 		return nil, err
+	}
+
+	// Get the metrics data for all nodes from the Kubernetes API.
+	// Unmarshal the data into the podMetrics slice.
+	// If there is an error while caling the metrics api we ignore it, because we only display no values for cpu and memory usage.
+	data, err := c.clientset.RESTClient().Get().AbsPath("apis/metrics.k8s.io/v1beta1/pods").DoRaw()
+	if err == nil {
+		err = json.Unmarshal(data, &podMetrics)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Iterate over all pods to populate our custom pods structure.
@@ -420,14 +428,13 @@ func (c *Client) GetPod(name, namespace string, selectedContainer int) (*Pod, er
 
 	// Get the events for a pod.
 	// cURL Example: curl http://localhost:8001/api/v1/namespaces/kube-system/events?fieldSelector=involvedObject.name=kube-proxy-tfpcb
+	// We ignore an error during the API call, because we only lose the events for the pod.
 	eventsData, err := c.clientset.RESTClient().Get().AbsPath("api/v1/namespaces/"+namespace+"/events").Param("fieldSelector", "involvedObject.name="+name).DoRaw()
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(eventsData, &podEvents)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		err = json.Unmarshal(eventsData, &podEvents)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var events []Event
@@ -439,28 +446,24 @@ func (c *Client) GetPod(name, namespace string, selectedContainer int) (*Pod, er
 	}
 
 	// Get the logs for a pod.
+	// Same as for events: We ignnore the error because we only lose the logs.
 	if len(pod.Spec.Containers) <= selectedContainer {
 		selectedContainer = 0
 	}
 
 	var tailLines int64 = 100
-	logData, err := c.clientset.CoreV1().Pods(namespace).GetLogs(name, &v1.PodLogOptions{
+	logData, _ := c.clientset.CoreV1().Pods(namespace).GetLogs(name, &v1.PodLogOptions{
 		Container: pod.Spec.Containers[selectedContainer].Name,
 		TailLines: &tailLines,
 	}).DoRaw()
-	if err != nil {
-		return nil, err
-	}
 
 	// Get the metrics for the pod.
 	podMetricsData, err := c.clientset.RESTClient().Get().AbsPath("apis/metrics.k8s.io/v1beta1/namespaces/" + namespace + "/pods/" + name).DoRaw()
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(podMetricsData, &podMetrics)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		err = json.Unmarshal(podMetricsData, &podMetrics)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get the metrics for each container.
@@ -533,17 +536,14 @@ func (c *Client) GetPod(name, namespace string, selectedContainer int) (*Pod, er
 		Namespace:       pod.Namespace,
 		NodeName:        pod.Spec.NodeName,
 		ContainersCount: len(containers),
-		//ContainersReady: ready,
-		Status: podStatus,
-		//StatusGeneral:   statusGeneral,
-		//Restarts:        restarts,
-		Labels:       pod.Labels,
-		Annotations:  pod.Annotations,
-		ControlledBy: controlledBy,
-		CreationDate: pod.CreationTimestamp.Time,
-		IP:           pod.Status.PodIP,
-		Containers:   containers,
-		LogLines:     strings.Split(string(logData), "\n"),
-		Events:       events,
+		Status:          podStatus,
+		Labels:          pod.Labels,
+		Annotations:     pod.Annotations,
+		ControlledBy:    controlledBy,
+		CreationDate:    pod.CreationTimestamp.Time,
+		IP:              pod.Status.PodIP,
+		Containers:      containers,
+		LogLines:        strings.Split(string(logData), "\n"),
+		Events:          events,
 	}, nil
 }
