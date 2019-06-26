@@ -416,7 +416,7 @@ func (c *Client) GetPodsMetrics(filter Filter, sortorder Sort) ([]Pod, error) {
 
 // GetPod returns a pod with all details.
 func (c *Client) GetPod(name, namespace string, selectedContainer int) (*Pod, error) {
-	var podEvents v1.EventList
+	var events []Event
 	var podMetrics mev1beta1.PodMetrics
 	var containers []Container
 
@@ -429,20 +429,16 @@ func (c *Client) GetPod(name, namespace string, selectedContainer int) (*Pod, er
 	// Get the events for a pod.
 	// cURL Example: curl http://localhost:8001/api/v1/namespaces/kube-system/events?fieldSelector=involvedObject.name=kube-proxy-tfpcb
 	// We ignore an error during the API call, because we only lose the events for the pod.
-	eventsData, err := c.clientset.RESTClient().Get().AbsPath("api/v1/namespaces/"+namespace+"/events").Param("fieldSelector", "involvedObject.name="+name).DoRaw()
-	if err == nil {
-		err = json.Unmarshal(eventsData, &podEvents)
-		if err != nil {
-			return nil, err
+	podEvents, err := c.clientset.CoreV1().Events(namespace).List(metav1.ListOptions{
+		FieldSelector: "involvedObject.name=" + name,
+	})
+	if err == nil && podEvents != nil {
+		for _, event := range podEvents.Items {
+			events = append(events, Event{
+				Message:   event.Message,
+				Timestamp: event.LastTimestamp.Unix(),
+			})
 		}
-	}
-
-	var events []Event
-	for _, event := range podEvents.Items {
-		events = append(events, Event{
-			Message:   event.Message,
-			Timestamp: event.LastTimestamp.Unix(),
-		})
 	}
 
 	// Get the logs for a pod.
