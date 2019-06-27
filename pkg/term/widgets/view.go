@@ -42,4 +42,10 @@ const (
 	// ViewTypePods represents the pods view.
 	// The pods view is represented by the PodsWidget.
 	ViewTypePods ViewType = "pods"
+	// ViewTypeEvents represents the events view.
+	// The events view is represented by the EventsWidget.
+	ViewTypeEvents ViewType = "events"
+	// ViewTypeEventDetails represents the event details view.
+	// The event details view is represented by the EventDetailsWidget.
+	ViewTypeEventDetails ViewType = "eventdetails"
 )

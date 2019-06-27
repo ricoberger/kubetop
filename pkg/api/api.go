@@ -543,3 +543,78 @@ func (c *Client) GetPod(name, namespace string, selectedContainer int) (*Pod, er
 		Events:          events,
 	}, nil
 }
+
+// GetEvents returns events.
+func (c *Client) GetEvents(filter Filter, sortorder Sort) ([]Event, error) {
+	var events []Event
+
+	eventsList, err := c.clientset.CoreV1().Events(filter.Namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, event := range eventsList.Items {
+		if filter.Node == "" || filter.Node == event.Source.Host {
+			if filter.EventType == "" || filter.EventType == event.Type {
+				events = append(events, Event{
+					UID:       string(event.UID),
+					Message:   event.Message,
+					Timestamp: event.LastTimestamp.Unix(),
+					Count:     event.Count,
+					Name:      event.Name,
+					Namespace: event.Namespace,
+					Kind:      event.Kind,
+					Type:      event.Type,
+					Reason:    event.Reason,
+					Source:    event.Source.Component,
+					Node:      event.Source.Host,
+				})
+			}
+		}
+	}
+
+	// Sort all our events by the provided sortorder.
+	if sortorder == SortName {
+		sort.SliceStable(events, func(i, j int) bool {
+			return events[i].Name < events[j].Name
+		})
+	} else if sortorder == SortNamespace {
+		sort.SliceStable(events, func(i, j int) bool {
+			return events[i].Namespace < events[j].Namespace
+		})
+	} else if sortorder == SortTimeASC {
+		sort.SliceStable(events, func(i, j int) bool {
+			return events[i].Timestamp < events[j].Timestamp
+		})
+	} else if sortorder == SortTimeDESC {
+		sort.SliceStable(events, func(i, j int) bool {
+			return events[i].Timestamp > events[j].Timestamp
+		})
+	}
+
+	return events, nil
+}
+
+// GetEvent returns a single event.
+func (c *Client) GetEvent(name, namespace string) Event {
+	event, err := c.clientset.CoreV1().Events(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return Event{}
+	}
+
+	return Event{
+		UID:            string(event.UID),
+		Message:        event.Message,
+		Timestamp:      event.LastTimestamp.Unix(),
+		Count:          event.Count,
+		Name:           event.Name,
+		Namespace:      event.Namespace,
+		Kind:           event.Kind,
+		Type:           event.Type,
+		Reason:         event.Reason,
+		Source:         event.Source.Component,
+		Node:           event.Source.Host,
+		FirstTimestamp: event.FirstTimestamp.Time,
+		LastTimestamp:  event.LastTimestamp.Time,
+	}
+}

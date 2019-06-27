@@ -106,9 +106,34 @@ var podsCmd = &cobra.Command{
 	},
 }
 
+var eventsCmd = &cobra.Command{
+	Use:   "events",
+	Short: "Display events in the Kubernetes cluster",
+	Long:  "Display events in the Kubernetes cluster",
+	Run: func(cmd *cobra.Command, args []string) {
+		// Initialize Kubernetes API client.
+		client, err := api.NewClient(kubeconfig)
+		if err != nil {
+			log.Fatalf("Failed to initialize API client: %#v", err)
+		}
+
+		// Initialize and run the terminal user interface for kubetop.
+		t := term.Term{
+			APIClient: client,
+			ViewType:  widgets.ViewTypeEvents,
+		}
+
+		err = t.Run(api.Filter{Namespace: namespace, Node: "", Status: 10})
+		if err != nil {
+			log.Fatalf("Failed to initialize ui: %#v", err)
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(nodesCmd)
 	rootCmd.AddCommand(podsCmd)
+	rootCmd.AddCommand(eventsCmd)
 	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.PersistentFlags().StringVar(&kubeconfig, "kubeconfig", "", "Path to the kubeconfig file to use for CLI requests")

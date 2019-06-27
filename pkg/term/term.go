@@ -50,6 +50,9 @@ func (t *Term) Run(filter api.Filter) error {
 	} else if t.ViewType == widgets.ViewTypePods {
 		sortorder = api.SortNamespace
 		view = widgets.NewPodsWidget(t.APIClient, filter, sortorder, termWidth, termHeight)
+	} else if t.ViewType == widgets.ViewTypeEvents {
+		sortorder = api.SortTimeDESC
+		view = widgets.NewEventsWidget(t.APIClient, filter, sortorder, termWidth, termHeight)
 	}
 
 	if view == nil {
@@ -196,6 +199,13 @@ func (t *Term) Run(filter api.Filter) error {
 						t.ViewType = widgets.ViewTypePodDetails
 						statusbar.SetViewType(t.ViewType)
 						statusbar.SetPause(false)
+					} else if t.ViewType == widgets.ViewTypeEvents {
+						selectedRow := view.SelectedValues()
+
+						view = widgets.NewEventDetailsWidget(selectedRow[5], selectedRow[4], t.APIClient, view.Filter(), view.Sortorder(), termWidth, termHeight)
+						t.ViewType = widgets.ViewTypeEventDetails
+						statusbar.SetViewType(t.ViewType)
+						statusbar.SetPause(false)
 					}
 				}
 
@@ -211,6 +221,11 @@ func (t *Term) Run(filter api.Filter) error {
 				if t.ViewType == widgets.ViewTypePodDetails {
 					view = widgets.NewPodsWidget(t.APIClient, view.Filter(), view.Sortorder(), termWidth, termHeight)
 					t.ViewType = widgets.ViewTypePods
+					statusbar.SetViewType(t.ViewType)
+					statusbar.SetPause(false)
+				} else if t.ViewType == widgets.ViewTypeEventDetails {
+					view = widgets.NewEventsWidget(t.APIClient, view.Filter(), view.Sortorder(), termWidth, termHeight)
+					t.ViewType = widgets.ViewTypeEvents
 					statusbar.SetViewType(t.ViewType)
 					statusbar.SetPause(false)
 				}
@@ -234,7 +249,12 @@ func (t *Term) Run(filter api.Filter) error {
 				ui.Clear()
 				ui.Render(view, statusbar, list)
 			case "<F4>":
-				listType = widgets.ListTypeFilterStatus
+				if t.ViewType == widgets.ViewTypePods {
+					listType = widgets.ListTypeFilterStatus
+				} else if t.ViewType == widgets.ViewTypeEvents {
+					listType = widgets.ListTypeFilterEventType
+				}
+
 				listActive = list.Show(t.ViewType, listType, termWidth, termHeight)
 				ui.Clear()
 				ui.Render(view, statusbar, list)

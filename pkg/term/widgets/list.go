@@ -21,6 +21,8 @@ const (
 	ListTypeFilterNode ListType = "Filter by Node ..."
 	// ListTypeFilterStatus represents the status filter.
 	ListTypeFilterStatus ListType = "Filter by Status ..."
+	// ListTypeFilterEventType represents the event type filter.
+	ListTypeFilterEventType ListType = "Filter by Event Type ..."
 )
 
 // ListWidget represents the ui widget component for a list.
@@ -31,8 +33,10 @@ type ListWidget struct {
 	filterNamespaces []string
 	filterNodes      []string
 	filterStatuses   []string
+	filterEventTypes []string
 	sortNodes        []api.Sort
 	sortPods         []api.Sort
+	sortEvents       []api.Sort
 }
 
 // NewListWidget returns a new list widget.
@@ -48,8 +52,10 @@ func NewListWidget(apiClient *api.Client) *ListWidget {
 		[]string{},
 		[]string{},
 		[]string{"-", "Running", "Waiting", "Terminated"},
+		[]string{"-", "Normal", "Warning"},
 		[]api.Sort{api.SortCPUASC, api.SortCPUDESC, api.SortMemoryASC, api.SortMemoryDESC, api.SortName, api.SortPodsASC, api.SortPodsDESC},
 		[]api.Sort{api.SortCPUASC, api.SortCPUDESC, api.SortMemoryASC, api.SortMemoryDESC, api.SortName, api.SortNamespace, api.SortRestartsASC, api.SortRestartsDESC, api.SortStatus},
+		[]api.Sort{api.SortName, api.SortNamespace, api.SortTimeASC, api.SortTimeDESC},
 	}
 }
 
@@ -89,6 +95,28 @@ func (l *ListWidget) Selected(viewType ViewType, listType ListType, sortorder ap
 				filter.Status = 1
 			case "Terminated":
 				filter.Status = 0
+			}
+		}
+	} else if viewType == ViewTypeEvents {
+		if listType == ListTypeSort {
+			sortorder = l.sortEvents[l.SelectedRow]
+		} else if listType == ListTypeFilterNamespace {
+			if l.filterNamespaces[l.SelectedRow] == "-" {
+				filter.Namespace = ""
+			} else {
+				filter.Namespace = l.filterNamespaces[l.SelectedRow]
+			}
+		} else if listType == ListTypeFilterNode {
+			if l.filterNodes[l.SelectedRow] == "-" {
+				filter.Node = ""
+			} else {
+				filter.Node = l.filterNodes[l.SelectedRow]
+			}
+		} else if listType == ListTypeFilterEventType {
+			if l.filterEventTypes[l.SelectedRow] == "-" {
+				filter.EventType = ""
+			} else {
+				filter.EventType = l.filterEventTypes[l.SelectedRow]
 			}
 		}
 	}
@@ -143,11 +171,43 @@ func (l *ListWidget) Show(viewType ViewType, listType ListType, termWidth, termH
 				l.Rows = append(l.Rows, fmt.Sprintf("[%d] %s", index, status))
 			}
 		}
+	} else if viewType == ViewTypeEvents {
+		// For the events view we render the sort list and the filters for namespace, node and event type.
+		// The namespaces and nodes are selected from the Kubernetes API first.
+		if listType == ListTypeSort {
+			showList = true
+
+			for index, item := range l.sortEvents {
+				l.Rows = append(l.Rows, fmt.Sprintf("[%d] %s", index, item))
+			}
+		} else if listType == ListTypeFilterNamespace {
+			showList = true
+			l.filterNamespaces, _ = l.apiClient.GetNamespaces()
+
+			for index, namespace := range l.filterNamespaces {
+				l.Rows = append(l.Rows, fmt.Sprintf("[%d] %s", index, namespace))
+			}
+		} else if listType == ListTypeFilterNode {
+			showList = true
+			l.filterNodes, _ = l.apiClient.GetNodes()
+
+			for index, node := range l.filterNodes {
+				l.Rows = append(l.Rows, fmt.Sprintf("[%d] %s", index, node))
+			}
+		} else if listType == ListTypeFilterEventType {
+			showList = true
+
+			for index, eventType := range l.filterEventTypes {
+				l.Rows = append(l.Rows, fmt.Sprintf("[%d] %s", index, eventType))
+			}
+		}
 	}
 
 	if showList {
 		l.SelectedRow = 0
 		l.SetRect(termWidth/2-25, termHeight/2-10, termWidth/2+25, termHeight/2+10)
+	} else {
+		l.SetRect(0, 0, 0, 0)
 	}
 
 	return showList
