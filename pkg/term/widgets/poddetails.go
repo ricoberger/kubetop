@@ -53,6 +53,7 @@ func NewPodDetailsWidget(name, namespace string, apiClient *api.Client, filter a
 	logs.Title = "Logs"
 	logs.TitleStyle = ui.NewStyle(ui.ColorClear)
 	logs.TextStyle = ui.NewStyle(ui.ColorClear)
+	logs.SelectedRowStyle = ui.NewStyle(ui.ColorCyan)
 	logs.WrapText = true
 
 	return &PodDetailsWidget{
