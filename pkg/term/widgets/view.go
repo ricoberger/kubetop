@@ -15,6 +15,12 @@ type View interface {
 	SelectedValues() []string
 	SelectNext()
 	SelectPrev()
+	SelectTop()
+	SelectBottom()
+	SelectHalfPageDown()
+	SelectHalfPageUp()
+	SelectPageDown()
+	SelectPageUp()
 	SetSortAndFilter(sortorder api.Sort, filter api.Filter)
 	Sortorder() api.Sort
 	TabNext()

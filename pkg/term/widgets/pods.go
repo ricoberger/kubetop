@@ -72,6 +72,36 @@ func (p *PodsWidget) SelectPrev() {
 	p.ScrollUp()
 }
 
+// SelectTop selects the top item in the table.
+func (p *PodsWidget) SelectTop() {
+	p.ScrollTop()
+}
+
+// SelectBottom selects the bottom item in the table.
+func (p *PodsWidget) SelectBottom() {
+	p.ScrollBottom()
+}
+
+// SelectHalfPageDown selects the item a half page down.
+func (p *PodsWidget) SelectHalfPageDown() {
+	p.ScrollHalfPageDown()
+}
+
+// SelectHalfPageUp selects the item a half page up.
+func (p *PodsWidget) SelectHalfPageUp() {
+	p.ScrollHalfPageUp()
+}
+
+// SelectPageDown selects the item on the next page.
+func (p *PodsWidget) SelectPageDown() {
+	p.ScrollPageDown()
+}
+
+// SelectPageUp selects the item on the previous page.
+func (p *PodsWidget) SelectPageUp() {
+	p.ScrollPageUp()
+}
+
 // SetSortAndFilter sets a new value for the sortorder and filter.
 func (p *PodsWidget) SetSortAndFilter(sortorder api.Sort, filter api.Filter) {
 	p.sortorder = sortorder

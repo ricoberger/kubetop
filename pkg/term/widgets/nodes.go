@@ -71,6 +71,36 @@ func (n *NodesWidget) SelectPrev() {
 	n.ScrollUp()
 }
 
+// SelectTop selects the top item in the table.
+func (n *NodesWidget) SelectTop() {
+	n.ScrollTop()
+}
+
+// SelectBottom selects the bottom item in the table.
+func (n *NodesWidget) SelectBottom() {
+	n.ScrollBottom()
+}
+
+// SelectHalfPageDown selects the item a half page down.
+func (n *NodesWidget) SelectHalfPageDown() {
+	n.ScrollHalfPageDown()
+}
+
+// SelectHalfPageUp selects the item a half page up.
+func (n *NodesWidget) SelectHalfPageUp() {
+	n.ScrollHalfPageUp()
+}
+
+// SelectPageDown selects the item on the next page.
+func (n *NodesWidget) SelectPageDown() {
+	n.ScrollPageDown()
+}
+
+// SelectPageUp selects the item on the previous page.
+func (n *NodesWidget) SelectPageUp() {
+	n.ScrollPageUp()
+}
+
 // SetSortAndFilter sets a new value for the sortorder and filter.
 func (n *NodesWidget) SetSortAndFilter(sortorder api.Sort, filter api.Filter) {
 	n.sortorder = sortorder

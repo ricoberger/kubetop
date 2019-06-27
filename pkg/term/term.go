@@ -72,6 +72,7 @@ func (t *Term) Run(filter api.Filter) error {
 	// Render our view and get all key events from the user.
 	ui.Render(view, statusbar, list)
 	uiEvents := ui.PollEvents()
+	previousKey := ""
 
 	// Handle kill signal sent event.
 	sigTerm := make(chan os.Signal, 2)
@@ -112,6 +113,50 @@ func (t *Term) Run(filter api.Filter) error {
 					ui.Render(view, statusbar, list)
 				} else {
 					view.SelectNext()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<Home>":
+				if !listActive {
+					view.SelectTop()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "g":
+				if !listActive {
+					if previousKey == "g" {
+						view.SelectTop()
+						ui.Clear()
+						ui.Render(view, statusbar, list)
+					}
+				}
+			case "G", "<End>":
+				if !listActive {
+					view.SelectBottom()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<C-d>":
+				if !listActive {
+					view.SelectHalfPageDown()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<C-u>":
+				if !listActive {
+					view.SelectHalfPageUp()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<C-f>":
+				if !listActive {
+					view.SelectPageDown()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<C-b>":
+				if !listActive {
+					view.SelectPageUp()
 					ui.Clear()
 					ui.Render(view, statusbar, list)
 				}
@@ -193,6 +238,12 @@ func (t *Term) Run(filter api.Filter) error {
 				listActive = list.Show(t.ViewType, listType, termWidth, termHeight)
 				ui.Clear()
 				ui.Render(view, statusbar, list)
+			}
+
+			if previousKey == e.ID {
+				previousKey = ""
+			} else {
+				previousKey = e.ID
 			}
 		}
 	}

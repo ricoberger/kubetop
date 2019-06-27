@@ -51,6 +51,12 @@ The following keys can be used for the navigation in kubetop.
 | `q`, `<C-c>` | Quit | Quit | Quit |
 | `k`, `<Up>`, `<MouseWheelUp>` | Scroll up through nodes | Scroll up through pods | Scroll up through logs |
 | `j`, `<Down>`, `<MouseWheelDown>` | Scroll down through nodes | Scroll down through pods | Scroll down through logs |
+| `<Home>`, `gg` | Scroll to the first node  | Scroll to the first pod | Scroll to the first log line |
+| `G`, `<End>` | Scroll to the last node | Scroll to the last pod | Scroll to the last log line |
+| `<C-d>` | Scroll half page down | Scroll half page down | Scroll half page down |
+| `<C-u>` | Scroll half page up | Scroll half page up | Scroll half page up |
+| `<C-f>` | Scroll page down | Scroll page down | Scroll page down |
+| `<C-b>` | Scroll page up | Scroll page up | Scroll page up |
 | `<Tab>` | - | - | Select next container |
 | `p` | Pause updating data | Pause updating data | Pause updating data |
 | `<Enter>` | Select node / Apply selected sortorder | Select pod / Apply selected sortorder/filter | - |
