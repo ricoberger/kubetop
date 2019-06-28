@@ -102,10 +102,22 @@ func (t *Term) Run(filter api.Filter) error {
 			case "k", "<Up>", "<MouseWheelUp>":
 				if listActive {
 					list.ScrollUp()
+
+					// If we are in the pod details view we need to update the view, because we need to load the logs for the selected container.
+					if t.ViewType == widgets.ViewTypePodDetails {
+						view.Update()
+					}
+
 					ui.Clear()
 					ui.Render(view, statusbar, list)
 				} else {
 					view.SelectPrev()
+
+					// If we are in the pod details view we need to update the view, because we need to load the logs for the selected container.
+					if t.ViewType == widgets.ViewTypePodDetails {
+						view.Update()
+					}
+
 					ui.Clear()
 					ui.Render(view, statusbar, list)
 				}
@@ -160,13 +172,6 @@ func (t *Term) Run(filter api.Filter) error {
 			case "<C-b>":
 				if !listActive {
 					view.SelectPageUp()
-					ui.Clear()
-					ui.Render(view, statusbar, list)
-				}
-			case "<Tab>":
-				if t.ViewType == widgets.ViewTypePodDetails {
-					view.TabNext()
-					view.Update()
 					ui.Clear()
 					ui.Render(view, statusbar, list)
 				}

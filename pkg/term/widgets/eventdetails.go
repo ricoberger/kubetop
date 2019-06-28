@@ -104,14 +104,6 @@ func (e *EventDetailsWidget) Sortorder() api.Sort {
 	return e.sortorder
 }
 
-// TabNext selects the next container.
-func (e *EventDetailsWidget) TabNext() {
-}
-
-// TabPrev selects the previous container.
-func (e *EventDetailsWidget) TabPrev() {
-}
-
 // TogglePause sets toggle pause.
 func (e *EventDetailsWidget) TogglePause() {
 	e.pause = !e.pause

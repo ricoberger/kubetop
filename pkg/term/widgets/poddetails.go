@@ -90,10 +90,12 @@ func (p *PodDetailsWidget) SelectedValues() []string {
 
 // SelectNext selects the next log line.
 func (p *PodDetailsWidget) SelectNext() {
+	p.containers.ScrollDown()
 }
 
 // SelectPrev selects the previous log line.
 func (p *PodDetailsWidget) SelectPrev() {
+	p.containers.ScrollUp()
 }
 
 // SelectTop selects the top item in the table.
@@ -129,20 +131,6 @@ func (p *PodDetailsWidget) SetSortAndFilter(sortorder api.Sort, filter api.Filte
 // Sortorder returns the setted sortorder.
 func (p *PodDetailsWidget) Sortorder() api.Sort {
 	return p.sortorder
-}
-
-// TabNext selects the next container.
-func (p *PodDetailsWidget) TabNext() {
-	if p.containers.SelectedRow < len(p.containers.Rows)-1 {
-		p.containers.ScrollDown()
-	} else {
-		p.containers.ScrollTop()
-	}
-}
-
-// TabPrev selects the previous container.
-func (p *PodDetailsWidget) TabPrev() {
-	p.containers.ScrollUp()
 }
 
 // TogglePause sets toggle pause.
@@ -265,6 +253,8 @@ func (p *PodDetailsWidget) Update() error {
 			pod.LogLines[i], pod.LogLines[opp] = pod.LogLines[opp], pod.LogLines[i]
 		}
 
+		// We need to check if the first line is empty, because we reverse the order of the log lines.
+		// In the API call we split the log lines at a new line character and so the last log line is always empty.
 		var firstLogLine int
 		if len(pod.LogLines) > 0 && pod.LogLines[0] == "" {
 			firstLogLine = 1

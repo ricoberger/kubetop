@@ -113,14 +113,6 @@ func (p *PodsWidget) Sortorder() api.Sort {
 	return p.sortorder
 }
 
-// TabNext does nothing.
-func (p *PodsWidget) TabNext() {
-}
-
-// TabPrev does nothing.
-func (p *PodsWidget) TabPrev() {
-}
-
 // TogglePause sets toggle pause.
 func (p *PodsWidget) TogglePause() {
 	p.pause = !p.pause

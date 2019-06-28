@@ -113,14 +113,6 @@ func (e *EventsWidget) Sortorder() api.Sort {
 	return e.sortorder
 }
 
-// TabNext does nothing.
-func (e *EventsWidget) TabNext() {
-}
-
-// TabPrev does nothing.
-func (e *EventsWidget) TabPrev() {
-}
-
 // TogglePause sets toggle pause.
 func (e *EventsWidget) TogglePause() {
 	e.pause = !e.pause

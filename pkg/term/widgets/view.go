@@ -23,8 +23,6 @@ type View interface {
 	SelectPageUp()
 	SetSortAndFilter(sortorder api.Sort, filter api.Filter)
 	Sortorder() api.Sort
-	TabNext()
-	TabPrev()
 	TogglePause()
 	Update() error
 }

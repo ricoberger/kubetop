@@ -112,14 +112,6 @@ func (n *NodesWidget) Sortorder() api.Sort {
 	return n.sortorder
 }
 
-// TabNext does nothing.
-func (n *NodesWidget) TabNext() {
-}
-
-// TabPrev does nothing.
-func (n *NodesWidget) TabPrev() {
-}
-
 // TogglePause sets toggle pause.
 func (n *NodesWidget) TogglePause() {
 	n.pause = !n.pause
