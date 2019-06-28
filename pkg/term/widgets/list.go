@@ -23,6 +23,8 @@ const (
 	ListTypeFilterStatus ListType = "Filter by Status ..."
 	// ListTypeFilterEventType represents the event type filter.
 	ListTypeFilterEventType ListType = "Filter by Event Type ..."
+	// ListTypeView represents the list for switching to an other view.
+	ListTypeView = "Select View ..."
 )
 
 // ListWidget represents the ui widget component for a list.
@@ -37,6 +39,7 @@ type ListWidget struct {
 	sortNodes        []api.Sort
 	sortPods         []api.Sort
 	sortEvents       []api.Sort
+	views            []ViewType
 }
 
 // NewListWidget returns a new list widget.
@@ -56,6 +59,7 @@ func NewListWidget(apiClient *api.Client) *ListWidget {
 		[]api.Sort{api.SortCPUASC, api.SortCPUDESC, api.SortMemoryASC, api.SortMemoryDESC, api.SortName, api.SortPodsASC, api.SortPodsDESC},
 		[]api.Sort{api.SortCPUASC, api.SortCPUDESC, api.SortMemoryASC, api.SortMemoryDESC, api.SortName, api.SortNamespace, api.SortRestartsASC, api.SortRestartsDESC, api.SortStatus},
 		[]api.Sort{api.SortName, api.SortNamespace, api.SortTimeASC, api.SortTimeDESC},
+		[]ViewType{ViewTypePods, ViewTypeNodes, ViewTypeEvents},
 	}
 }
 
@@ -65,7 +69,7 @@ func (l *ListWidget) Hide() {
 }
 
 // Selected determines the selected sortorder or filter.
-func (l *ListWidget) Selected(viewType ViewType, listType ListType, sortorder api.Sort, filter api.Filter) (api.Sort, api.Filter) {
+func (l *ListWidget) Selected(viewType ViewType, listType ListType, sortorder api.Sort, filter api.Filter) (ViewType, api.Sort, api.Filter) {
 	if viewType == ViewTypeNodes {
 		if listType == ListTypeSort {
 			sortorder = l.sortNodes[l.SelectedRow]
@@ -121,8 +125,12 @@ func (l *ListWidget) Selected(viewType ViewType, listType ListType, sortorder ap
 		}
 	}
 
+	if listType == ListTypeView {
+		viewType = l.views[l.SelectedRow]
+	}
+
 	l.SetRect(0, 0, 0, 0)
-	return sortorder, filter
+	return viewType, sortorder, filter
 }
 
 // Show shows a list with the specified sort options or filters.
@@ -200,6 +208,14 @@ func (l *ListWidget) Show(viewType ViewType, listType ListType, termWidth, termH
 			for index, eventType := range l.filterEventTypes {
 				l.Rows = append(l.Rows, fmt.Sprintf("[%d] %s", index, eventType))
 			}
+		}
+	}
+
+	if listType == ListTypeView {
+		showList = true
+
+		for index, viewType := range l.views {
+			l.Rows = append(l.Rows, fmt.Sprintf("[%d] %s", index, viewType))
 		}
 	}
 

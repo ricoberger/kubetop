@@ -64,6 +64,7 @@ The following keys can be used for the navigation in kubetop.
 |  `<F2>` | - | Show namespace filter | - | Show namespace filter | - |
 |  `<F3>` | - | Show node filter | - | Show node filter | - |
 |  `<F4>` | - | Show status filter | - | Show event type filter | - |
+|  `v` | Select view | Select view | Select view | Select view | Select view |
 
 ## Dependencies
 
