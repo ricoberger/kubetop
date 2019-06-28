@@ -3,6 +3,7 @@ package widgets
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/ricoberger/kubetop/pkg/api"
@@ -19,7 +20,7 @@ type PodDetailsWidget struct {
 	podDetails1 *w.Paragraph
 	podDetails2 *w.Paragraph
 	containers  *Table
-	logs        *w.List
+	logs        *w.Paragraph
 
 	apiClient *api.Client
 	filter    api.Filter
@@ -48,12 +49,11 @@ func NewPodDetailsWidget(name, namespace string, apiClient *api.Client, filter a
 		containers.ColWidths = []int{helpers.MaxInt(containers.Inner.Dx()-180, 40), 20, 40, 20, 20, 20, 20, 20, 20}
 	}
 
-	logs := w.NewList()
+	logs := w.NewParagraph()
 	logs.Border = true
 	logs.Title = "Logs"
 	logs.TitleStyle = ui.NewStyle(ui.ColorClear)
 	logs.TextStyle = ui.NewStyle(ui.ColorClear)
-	logs.SelectedRowStyle = ui.NewStyle(ui.ColorCyan)
 	logs.WrapText = true
 
 	return &PodDetailsWidget{
@@ -90,42 +90,34 @@ func (p *PodDetailsWidget) SelectedValues() []string {
 
 // SelectNext selects the next log line.
 func (p *PodDetailsWidget) SelectNext() {
-	p.logs.ScrollDown()
 }
 
 // SelectPrev selects the previous log line.
 func (p *PodDetailsWidget) SelectPrev() {
-	p.logs.ScrollUp()
 }
 
 // SelectTop selects the top item in the table.
 func (p *PodDetailsWidget) SelectTop() {
-	p.logs.ScrollTop()
 }
 
 // SelectBottom selects the bottom item in the table.
 func (p *PodDetailsWidget) SelectBottom() {
-	p.logs.ScrollBottom()
 }
 
 // SelectHalfPageDown selects the item a half page down.
 func (p *PodDetailsWidget) SelectHalfPageDown() {
-	p.logs.ScrollHalfPageDown()
 }
 
 // SelectHalfPageUp selects the item a half page up.
 func (p *PodDetailsWidget) SelectHalfPageUp() {
-	p.logs.ScrollHalfPageUp()
 }
 
 // SelectPageDown selects the item on the next page.
 func (p *PodDetailsWidget) SelectPageDown() {
-	p.logs.ScrollPageDown()
 }
 
 // SelectPageUp selects the item on the previous page.
 func (p *PodDetailsWidget) SelectPageUp() {
-	p.logs.ScrollPageUp()
 }
 
 // SetSortAndFilter sets a new value for the sortorder and filter.
@@ -249,21 +241,21 @@ func (p *PodDetailsWidget) Update() error {
 			Annotations: %s`, labelsStr, annotationsStr)
 
 		// Render table with the containers.
-		strings := make([][]string, len(pod.Containers))
+		rows := make([][]string, len(pod.Containers))
 		for i, container := range pod.Containers {
-			strings[i] = make([]string, 9)
-			strings[i][0] = container.Name
-			strings[i][1] = fmt.Sprintf("%d", container.Restarts)
-			strings[i][2] = container.Status
-			strings[i][3] = fmt.Sprintf("%dm", container.CPU)
-			strings[i][4] = helpers.RenderCPUMax(container.CPUMin, 1, 1)
-			strings[i][5] = helpers.RenderCPUMax(container.CPUMax, 1, 1)
-			strings[i][6] = helpers.FormatBytes(container.Memory)
-			strings[i][7] = helpers.RenderMemoryMax(container.MemoryMin, 1, 1)
-			strings[i][8] = helpers.RenderMemoryMax(container.MemoryMax, 1, 1)
+			rows[i] = make([]string, 9)
+			rows[i][0] = container.Name
+			rows[i][1] = fmt.Sprintf("%d", container.Restarts)
+			rows[i][2] = container.Status
+			rows[i][3] = fmt.Sprintf("%dm", container.CPU)
+			rows[i][4] = helpers.RenderCPUMax(container.CPUMin, 1, 1)
+			rows[i][5] = helpers.RenderCPUMax(container.CPUMax, 1, 1)
+			rows[i][6] = helpers.FormatBytes(container.Memory)
+			rows[i][7] = helpers.RenderMemoryMax(container.MemoryMin, 1, 1)
+			rows[i][8] = helpers.RenderMemoryMax(container.MemoryMax, 1, 1)
 		}
 
-		p.containers.Rows = strings
+		p.containers.Rows = rows
 
 		// Render log lines.
 		// First reverse the order of the log lines, so the newest one is on top.
@@ -273,7 +265,12 @@ func (p *PodDetailsWidget) Update() error {
 			pod.LogLines[i], pod.LogLines[opp] = pod.LogLines[opp], pod.LogLines[i]
 		}
 
-		p.logs.Rows = pod.LogLines
+		var firstLogLine int
+		if len(pod.LogLines) > 0 && pod.LogLines[0] == "" {
+			firstLogLine = 1
+		}
+
+		p.logs.Text = strings.Join(pod.LogLines[firstLogLine:len(pod.LogLines)], "\n")
 
 		// Bring it all together and calculate the position for podDetails1, podDetails2, containers and logs.
 		// Caculate the position of the containers table based on the height of podDetails1 and podDetails2.
