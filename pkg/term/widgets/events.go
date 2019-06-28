@@ -135,23 +135,23 @@ func (e *EventsWidget) Update() error {
 			return err
 		}
 
-		s := make([][]string, len(events))
+		rows := make([][]string, len(events))
 		for i, event := range events {
-			s[i] = make([]string, 11)
-			s[i][0] = event.UID
-			s[i][1] = helpers.FormatDuration(time.Now().Sub(time.Unix(event.Timestamp, 0)))
-			s[i][2] = fmt.Sprintf("%d", event.Count)
-			s[i][3] = event.Type
-			s[i][4] = event.Namespace
-			s[i][5] = event.Name
-			s[i][6] = event.Message
-			s[i][7] = event.Kind
-			s[i][8] = event.Reason
-			s[i][9] = event.Source
-			s[i][10] = event.Node
+			rows[i] = make([]string, 11)
+			rows[i][0] = event.UID
+			rows[i][1] = helpers.FormatDuration(time.Now().Sub(time.Unix(event.Timestamp, 0)))
+			rows[i][2] = fmt.Sprintf("%d", event.Count)
+			rows[i][3] = event.Type
+			rows[i][4] = event.Namespace
+			rows[i][5] = event.Name
+			rows[i][6] = event.Message
+			rows[i][7] = event.Kind
+			rows[i][8] = event.Reason
+			rows[i][9] = event.Source
+			rows[i][10] = event.Node
 		}
 
-		e.Rows = s
+		e.Rows = rows
 	}
 
 	return nil

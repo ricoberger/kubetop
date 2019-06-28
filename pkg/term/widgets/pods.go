@@ -135,23 +135,23 @@ func (p *PodsWidget) Update() error {
 			return err
 		}
 
-		strings := make([][]string, len(pods))
+		rows := make([][]string, len(pods))
 		for i, pod := range pods {
-			strings[i] = make([]string, 11)
-			strings[i][0] = pod.Namespace
-			strings[i][1] = pod.Name
-			strings[i][2] = fmt.Sprintf("%d/%d", pod.ContainersReady, pod.ContainersCount)
-			strings[i][3] = pod.Status
-			strings[i][4] = fmt.Sprintf("%d", pod.Restarts)
-			strings[i][5] = fmt.Sprintf("%dm", pod.CPU)
-			strings[i][6] = helpers.RenderCPUMax(pod.CPUMax, pod.CPUMaxContainerCount, int64(pod.ContainersCount))
-			strings[i][7] = helpers.FormatBytes(pod.Memory)
-			strings[i][8] = helpers.RenderMemoryMax(pod.MemoryMax, pod.MemoryMaxContainerCount, int64(pod.ContainersCount))
-			strings[i][9] = pod.IP
-			strings[i][10] = helpers.FormatDuration(time.Now().Sub(pod.CreationDate))
+			rows[i] = make([]string, 11)
+			rows[i][0] = pod.Namespace
+			rows[i][1] = pod.Name
+			rows[i][2] = fmt.Sprintf("%d/%d", pod.ContainersReady, pod.ContainersCount)
+			rows[i][3] = pod.Status
+			rows[i][4] = fmt.Sprintf("%d", pod.Restarts)
+			rows[i][5] = fmt.Sprintf("%dm", pod.CPU)
+			rows[i][6] = helpers.RenderCPUMax(pod.CPUMax, pod.CPUMaxContainerCount, int64(pod.ContainersCount))
+			rows[i][7] = helpers.FormatBytes(pod.Memory)
+			rows[i][8] = helpers.RenderMemoryMax(pod.MemoryMax, pod.MemoryMaxContainerCount, int64(pod.ContainersCount))
+			rows[i][9] = pod.IP
+			rows[i][10] = helpers.FormatDuration(time.Now().Sub(pod.CreationDate))
 		}
 
-		p.Rows = strings
+		p.Rows = rows
 	}
 
 	return nil

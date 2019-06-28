@@ -134,19 +134,19 @@ func (n *NodesWidget) Update() error {
 			return err
 		}
 
-		strings := make([][]string, len(nodes))
+		rows := make([][]string, len(nodes))
 		for i, node := range nodes {
-			strings[i] = make([]string, 7)
-			strings[i][0] = node.Name
-			strings[i][1] = fmt.Sprintf("%d", node.PodsCount)
-			strings[i][2] = fmt.Sprintf("%.2f%%", (float64(node.CPUUsed) * 100.0 / float64(node.CPUTotal)))
-			strings[i][3] = fmt.Sprintf("%.2f%%", (float64(node.MemoryUsed) * 100.0 / float64(node.MemoryTotal)))
-			strings[i][4] = helpers.FormatBytes(node.MemoryTotal)
-			strings[i][5] = node.ExternalIP
-			strings[i][6] = node.InternalIP
+			rows[i] = make([]string, 7)
+			rows[i][0] = node.Name
+			rows[i][1] = fmt.Sprintf("%d", node.PodsCount)
+			rows[i][2] = fmt.Sprintf("%.2f%%", (float64(node.CPUUsed) * 100.0 / float64(node.CPUTotal)))
+			rows[i][3] = fmt.Sprintf("%.2f%%", (float64(node.MemoryUsed) * 100.0 / float64(node.MemoryTotal)))
+			rows[i][4] = helpers.FormatBytes(node.MemoryTotal)
+			rows[i][5] = node.ExternalIP
+			rows[i][6] = node.InternalIP
 		}
 
-		n.Rows = strings
+		n.Rows = rows
 	}
 
 	return nil
