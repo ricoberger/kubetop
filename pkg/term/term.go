@@ -50,6 +50,9 @@ func (t *Term) Run(filter api.Filter) error {
 	} else if t.ViewType == widgets.ViewTypePods {
 		sortorder = api.SortNamespace
 		view = widgets.NewPodsWidget(t.APIClient, filter, sortorder, termWidth, termHeight)
+	} else if t.ViewType == widgets.ViewTypeEvents {
+		sortorder = api.SortTimeDESC
+		view = widgets.NewEventsWidget(t.APIClient, filter, sortorder, termWidth, termHeight)
 	}
 
 	if view == nil {
@@ -72,6 +75,7 @@ func (t *Term) Run(filter api.Filter) error {
 	// Render our view and get all key events from the user.
 	ui.Render(view, statusbar, list)
 	uiEvents := ui.PollEvents()
+	previousKey := ""
 
 	// Handle kill signal sent event.
 	sigTerm := make(chan os.Signal, 2)
@@ -98,10 +102,22 @@ func (t *Term) Run(filter api.Filter) error {
 			case "k", "<Up>", "<MouseWheelUp>":
 				if listActive {
 					list.ScrollUp()
+
+					// If we are in the pod details view we need to update the view, because we need to load the logs for the selected container.
+					if t.ViewType == widgets.ViewTypePodDetails {
+						view.Update()
+					}
+
 					ui.Clear()
 					ui.Render(view, statusbar, list)
 				} else {
 					view.SelectPrev()
+
+					// If we are in the pod details view we need to update the view, because we need to load the logs for the selected container.
+					if t.ViewType == widgets.ViewTypePodDetails {
+						view.Update()
+					}
+
 					ui.Clear()
 					ui.Render(view, statusbar, list)
 				}
@@ -115,10 +131,47 @@ func (t *Term) Run(filter api.Filter) error {
 					ui.Clear()
 					ui.Render(view, statusbar, list)
 				}
-			case "<Tab>":
-				if t.ViewType == widgets.ViewTypePodDetails {
-					view.TabNext()
-					view.Update()
+			case "<Home>":
+				if !listActive {
+					view.SelectTop()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "g":
+				if !listActive {
+					if previousKey == "g" {
+						view.SelectTop()
+						ui.Clear()
+						ui.Render(view, statusbar, list)
+					}
+				}
+			case "G", "<End>":
+				if !listActive {
+					view.SelectBottom()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<C-d>":
+				if !listActive {
+					view.SelectHalfPageDown()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<C-u>":
+				if !listActive {
+					view.SelectHalfPageUp()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<C-f>":
+				if !listActive {
+					view.SelectPageDown()
+					ui.Clear()
+					ui.Render(view, statusbar, list)
+				}
+			case "<C-b>":
+				if !listActive {
+					view.SelectPageUp()
 					ui.Clear()
 					ui.Render(view, statusbar, list)
 				}
@@ -130,10 +183,32 @@ func (t *Term) Run(filter api.Filter) error {
 				ui.Render(view, statusbar, list)
 			case "<Enter>":
 				if listActive {
-					sortorder, filter := list.Selected(t.ViewType, listType, view.Sortorder(), view.Filter())
-					view.SetSortAndFilter(sortorder, filter)
-					statusbar.SetSortAndFilter(sortorder, filter)
-					listActive = false
+					viewType, sortorder, filter := list.Selected(t.ViewType, listType, view.Sortorder(), view.Filter())
+					if viewType != t.ViewType {
+						t.ViewType = viewType
+						filter := api.Filter{Namespace: "", Node: "", Status: 10}
+
+						if viewType == widgets.ViewTypeNodes {
+							view = widgets.NewNodesWidget(t.APIClient, filter, api.SortName, termWidth, termHeight)
+							statusbar.SetViewType(t.ViewType)
+							statusbar.SetSortAndFilter(api.SortName, filter)
+							statusbar.SetPause(false)
+						} else if viewType == widgets.ViewTypePods {
+							view = widgets.NewPodsWidget(t.APIClient, filter, api.SortNamespace, termWidth, termHeight)
+							statusbar.SetViewType(t.ViewType)
+							statusbar.SetSortAndFilter(api.SortNamespace, filter)
+							statusbar.SetPause(false)
+						} else if viewType == widgets.ViewTypeEvents {
+							view = widgets.NewEventsWidget(t.APIClient, filter, api.SortTimeDESC, termWidth, termHeight)
+							statusbar.SetViewType(t.ViewType)
+							statusbar.SetSortAndFilter(api.SortTimeDESC, filter)
+							statusbar.SetPause(false)
+						}
+					} else {
+						view.SetSortAndFilter(sortorder, filter)
+						statusbar.SetSortAndFilter(sortorder, filter)
+						listActive = false
+					}
 				} else {
 					if t.ViewType == widgets.ViewTypeNodes {
 						selectedRow := view.SelectedValues()
@@ -151,6 +226,13 @@ func (t *Term) Run(filter api.Filter) error {
 						t.ViewType = widgets.ViewTypePodDetails
 						statusbar.SetViewType(t.ViewType)
 						statusbar.SetPause(false)
+					} else if t.ViewType == widgets.ViewTypeEvents {
+						selectedRow := view.SelectedValues()
+
+						view = widgets.NewEventDetailsWidget(selectedRow[5], selectedRow[4], t.APIClient, view.Filter(), view.Sortorder(), termWidth, termHeight)
+						t.ViewType = widgets.ViewTypeEventDetails
+						statusbar.SetViewType(t.ViewType)
+						statusbar.SetPause(false)
 					}
 				}
 
@@ -166,6 +248,11 @@ func (t *Term) Run(filter api.Filter) error {
 				if t.ViewType == widgets.ViewTypePodDetails {
 					view = widgets.NewPodsWidget(t.APIClient, view.Filter(), view.Sortorder(), termWidth, termHeight)
 					t.ViewType = widgets.ViewTypePods
+					statusbar.SetViewType(t.ViewType)
+					statusbar.SetPause(false)
+				} else if t.ViewType == widgets.ViewTypeEventDetails {
+					view = widgets.NewEventsWidget(t.APIClient, view.Filter(), view.Sortorder(), termWidth, termHeight)
+					t.ViewType = widgets.ViewTypeEvents
 					statusbar.SetViewType(t.ViewType)
 					statusbar.SetPause(false)
 				}
@@ -189,10 +276,26 @@ func (t *Term) Run(filter api.Filter) error {
 				ui.Clear()
 				ui.Render(view, statusbar, list)
 			case "<F4>":
-				listType = widgets.ListTypeFilterStatus
+				if t.ViewType == widgets.ViewTypePods {
+					listType = widgets.ListTypeFilterStatus
+				} else if t.ViewType == widgets.ViewTypeEvents {
+					listType = widgets.ListTypeFilterEventType
+				}
+
 				listActive = list.Show(t.ViewType, listType, termWidth, termHeight)
 				ui.Clear()
 				ui.Render(view, statusbar, list)
+			case "v":
+				listType = widgets.ListTypeView
+				listActive = list.Show(t.ViewType, listType, termWidth, termHeight)
+				ui.Clear()
+				ui.Render(view, statusbar, list)
+			}
+
+			if previousKey == e.ID {
+				previousKey = ""
+			} else {
+				previousKey = e.ID
 			}
 		}
 	}

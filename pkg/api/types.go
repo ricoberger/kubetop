@@ -57,8 +57,19 @@ type Container struct {
 
 // Event represents a event in a pod of the Kubernetes cluster with all needed fields.
 type Event struct {
-	Message   string
-	Timestamp int64
+	UID            string
+	Message        string
+	Timestamp      int64
+	Count          int32
+	Name           string
+	Namespace      string
+	Kind           string
+	Type           string
+	Reason         string
+	Source         string
+	Node           string
+	FirstTimestamp time.Time
+	LastTimestamp  time.Time
 }
 
 // Sort is our custom type which represents the sort order for the data which is returned by the Kubernetes API.
@@ -87,6 +98,10 @@ const (
 	SortRestartsDESC Sort = "Restarts (D)"
 	// SortStatus sorts the results of an API request by the status.
 	SortStatus Sort = "Status"
+	// SortTimeASC sorts the results of an API request by the timestamp (asc).
+	SortTimeASC = "Timestamp (A)"
+	// SortTimeDESC sorts the results of an API request by the timestamp (desc).
+	SortTimeDESC = "Timestamp (D)"
 )
 
 // Filter is our custom type which applies a filter for the data which is returned by the Kubernetes API.
@@ -94,4 +109,5 @@ type Filter struct {
 	Namespace string
 	Node      string
 	Status    int
+	EventType string
 }

@@ -71,6 +71,36 @@ func (n *NodesWidget) SelectPrev() {
 	n.ScrollUp()
 }
 
+// SelectTop selects the top item in the table.
+func (n *NodesWidget) SelectTop() {
+	n.ScrollTop()
+}
+
+// SelectBottom selects the bottom item in the table.
+func (n *NodesWidget) SelectBottom() {
+	n.ScrollBottom()
+}
+
+// SelectHalfPageDown selects the item a half page down.
+func (n *NodesWidget) SelectHalfPageDown() {
+	n.ScrollHalfPageDown()
+}
+
+// SelectHalfPageUp selects the item a half page up.
+func (n *NodesWidget) SelectHalfPageUp() {
+	n.ScrollHalfPageUp()
+}
+
+// SelectPageDown selects the item on the next page.
+func (n *NodesWidget) SelectPageDown() {
+	n.ScrollPageDown()
+}
+
+// SelectPageUp selects the item on the previous page.
+func (n *NodesWidget) SelectPageUp() {
+	n.ScrollPageUp()
+}
+
 // SetSortAndFilter sets a new value for the sortorder and filter.
 func (n *NodesWidget) SetSortAndFilter(sortorder api.Sort, filter api.Filter) {
 	n.sortorder = sortorder
@@ -80,14 +110,6 @@ func (n *NodesWidget) SetSortAndFilter(sortorder api.Sort, filter api.Filter) {
 // Sortorder returns the setted sortorder.
 func (n *NodesWidget) Sortorder() api.Sort {
 	return n.sortorder
-}
-
-// TabNext does nothing.
-func (n *NodesWidget) TabNext() {
-}
-
-// TabPrev does nothing.
-func (n *NodesWidget) TabPrev() {
 }
 
 // TogglePause sets toggle pause.
@@ -104,19 +126,19 @@ func (n *NodesWidget) Update() error {
 			return err
 		}
 
-		strings := make([][]string, len(nodes))
+		rows := make([][]string, len(nodes))
 		for i, node := range nodes {
-			strings[i] = make([]string, 7)
-			strings[i][0] = node.Name
-			strings[i][1] = fmt.Sprintf("%d", node.PodsCount)
-			strings[i][2] = fmt.Sprintf("%.2f%%", (float64(node.CPUUsed) * 100.0 / float64(node.CPUTotal)))
-			strings[i][3] = fmt.Sprintf("%.2f%%", (float64(node.MemoryUsed) * 100.0 / float64(node.MemoryTotal)))
-			strings[i][4] = helpers.FormatBytes(node.MemoryTotal)
-			strings[i][5] = node.ExternalIP
-			strings[i][6] = node.InternalIP
+			rows[i] = make([]string, 7)
+			rows[i][0] = node.Name
+			rows[i][1] = fmt.Sprintf("%d", node.PodsCount)
+			rows[i][2] = fmt.Sprintf("%.2f%%", (float64(node.CPUUsed) * 100.0 / float64(node.CPUTotal)))
+			rows[i][3] = fmt.Sprintf("%.2f%%", (float64(node.MemoryUsed) * 100.0 / float64(node.MemoryTotal)))
+			rows[i][4] = helpers.FormatBytes(node.MemoryTotal)
+			rows[i][5] = node.ExternalIP
+			rows[i][6] = node.InternalIP
 		}
 
-		n.Rows = strings
+		n.Rows = rows
 	}
 
 	return nil

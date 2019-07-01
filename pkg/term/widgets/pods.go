@@ -72,6 +72,36 @@ func (p *PodsWidget) SelectPrev() {
 	p.ScrollUp()
 }
 
+// SelectTop selects the top item in the table.
+func (p *PodsWidget) SelectTop() {
+	p.ScrollTop()
+}
+
+// SelectBottom selects the bottom item in the table.
+func (p *PodsWidget) SelectBottom() {
+	p.ScrollBottom()
+}
+
+// SelectHalfPageDown selects the item a half page down.
+func (p *PodsWidget) SelectHalfPageDown() {
+	p.ScrollHalfPageDown()
+}
+
+// SelectHalfPageUp selects the item a half page up.
+func (p *PodsWidget) SelectHalfPageUp() {
+	p.ScrollHalfPageUp()
+}
+
+// SelectPageDown selects the item on the next page.
+func (p *PodsWidget) SelectPageDown() {
+	p.ScrollPageDown()
+}
+
+// SelectPageUp selects the item on the previous page.
+func (p *PodsWidget) SelectPageUp() {
+	p.ScrollPageUp()
+}
+
 // SetSortAndFilter sets a new value for the sortorder and filter.
 func (p *PodsWidget) SetSortAndFilter(sortorder api.Sort, filter api.Filter) {
 	p.sortorder = sortorder
@@ -81,14 +111,6 @@ func (p *PodsWidget) SetSortAndFilter(sortorder api.Sort, filter api.Filter) {
 // Sortorder returns the setted sortorder.
 func (p *PodsWidget) Sortorder() api.Sort {
 	return p.sortorder
-}
-
-// TabNext does nothing.
-func (p *PodsWidget) TabNext() {
-}
-
-// TabPrev does nothing.
-func (p *PodsWidget) TabPrev() {
 }
 
 // TogglePause sets toggle pause.
@@ -105,23 +127,23 @@ func (p *PodsWidget) Update() error {
 			return err
 		}
 
-		strings := make([][]string, len(pods))
+		rows := make([][]string, len(pods))
 		for i, pod := range pods {
-			strings[i] = make([]string, 11)
-			strings[i][0] = pod.Namespace
-			strings[i][1] = pod.Name
-			strings[i][2] = fmt.Sprintf("%d/%d", pod.ContainersReady, pod.ContainersCount)
-			strings[i][3] = pod.Status
-			strings[i][4] = fmt.Sprintf("%d", pod.Restarts)
-			strings[i][5] = fmt.Sprintf("%dm", pod.CPU)
-			strings[i][6] = helpers.RenderCPUMax(pod.CPUMax, pod.CPUMaxContainerCount, int64(pod.ContainersCount))
-			strings[i][7] = helpers.FormatBytes(pod.Memory)
-			strings[i][8] = helpers.RenderMemoryMax(pod.MemoryMax, pod.MemoryMaxContainerCount, int64(pod.ContainersCount))
-			strings[i][9] = pod.IP
-			strings[i][10] = helpers.FormatDuration(time.Now().Sub(pod.CreationDate))
+			rows[i] = make([]string, 11)
+			rows[i][0] = pod.Namespace
+			rows[i][1] = pod.Name
+			rows[i][2] = fmt.Sprintf("%d/%d", pod.ContainersReady, pod.ContainersCount)
+			rows[i][3] = pod.Status
+			rows[i][4] = fmt.Sprintf("%d", pod.Restarts)
+			rows[i][5] = fmt.Sprintf("%dm", pod.CPU)
+			rows[i][6] = helpers.RenderCPUMax(pod.CPUMax, pod.CPUMaxContainerCount, int64(pod.ContainersCount))
+			rows[i][7] = helpers.FormatBytes(pod.Memory)
+			rows[i][8] = helpers.RenderMemoryMax(pod.MemoryMax, pod.MemoryMaxContainerCount, int64(pod.ContainersCount))
+			rows[i][9] = pod.IP
+			rows[i][10] = helpers.FormatDuration(time.Now().Sub(pod.CreationDate))
 		}
 
-		p.Rows = strings
+		p.Rows = rows
 	}
 
 	return nil

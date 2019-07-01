@@ -180,6 +180,94 @@ func (s *StatusbarWidget) Draw(buf *ui.Buffer) {
 			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
 			image.Pt(clusternameX, s.Inner.Min.Y+(s.Inner.Dy()/2)),
 		)
+	} else if s.viewType == ViewTypeEvents {
+		// Render sortorder.
+		sortorder := fmt.Sprintf("[F1] Sorted by %s", string(s.sortorder))
+		buf.SetString(
+			sortorder,
+			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
+			image.Pt(s.Inner.Min.X, s.Inner.Min.Y+(s.Inner.Dy()/2)),
+		)
+
+		// Render namespace filter.
+		filterNamespace := fmt.Sprintf("[F2] Namespace: %s", s.filter.Namespace)
+		if s.filter.Namespace == "" {
+			filterNamespace = "[F2] Namespace: -"
+		}
+
+		buf.SetString(
+			filterNamespace,
+			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
+			image.Pt(s.Inner.Min.X+len(sortorder)+2, s.Inner.Min.Y+(s.Inner.Dy()/2)),
+		)
+
+		// Render node filter.
+		filterNode := fmt.Sprintf("[F3] Node: %s", s.filter.Node)
+		if s.filter.Node == "" {
+			filterNode = "[F3] Node: -"
+		}
+
+		buf.SetString(
+			filterNode,
+			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
+			image.Pt(s.Inner.Min.X+len(sortorder)+2+len(filterNamespace)+2, s.Inner.Min.Y+(s.Inner.Dy()/2)),
+		)
+
+		// Render event type filter.
+		filterType := fmt.Sprintf("[F4] Event Type: %s", s.filter.EventType)
+		if s.filter.EventType == "" {
+			filterType = "[F4] Event Type: -"
+		}
+
+		buf.SetString(
+			filterType,
+			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
+			image.Pt(s.Inner.Min.X+len(sortorder)+2+len(filterNamespace)+2+len(filterNode)+2, s.Inner.Min.Y+(s.Inner.Dy()/2)),
+		)
+
+		// Render pause.
+		buf.SetString(
+			paused,
+			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
+			image.Pt(s.Inner.Min.X+len(sortorder)+2+len(filterNamespace)+2+len(filterNode)+2+len(filterType)+2, s.Inner.Min.Y+(s.Inner.Dy()/2)),
+		)
+
+		// Render clustername.
+		// Also calculate the position where the clustername is shown.
+		// The clustername is right aligned and if the terminal window is to small we cut of a part of the name.
+		clustername := s.apiClient.GetClustername()
+		clusternameX := s.Inner.Max.X - len(clustername)
+		if s.Inner.Max.X-len(clustername) < s.Inner.Min.X+len(sortorder)+2+len(filterNamespace)+2+len(filterNode)+2+len(filterType)+2+len(paused)+10 {
+			clusternameX = s.Inner.Min.X + len(sortorder) + 2 + len(filterNamespace) + 2 + len(filterNode) + 2 + len(filterType) + 2 + len(paused) + 10
+		}
+
+		buf.SetString(
+			clustername,
+			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
+			image.Pt(clusternameX, s.Inner.Min.Y+(s.Inner.Dy()/2)),
+		)
+	} else if s.viewType == ViewTypeEventDetails {
+		// Render pause.
+		buf.SetString(
+			paused,
+			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
+			image.Pt(s.Inner.Min.X, s.Inner.Min.Y+(s.Inner.Dy()/2)),
+		)
+
+		// Render clustername.
+		// Also calculate the position where the clustername is shown.
+		// The clustername is right aligned and if the terminal window is to small we cut of a part of the name.
+		clustername := s.apiClient.GetClustername()
+		clusternameX := s.Inner.Max.X - len(clustername)
+		if s.Inner.Max.X-len(clustername) < s.Inner.Min.X+len(paused)+10 {
+			clusternameX = s.Inner.Min.X + len(paused) + 10
+		}
+
+		buf.SetString(
+			clustername,
+			ui.NewStyle(ui.ColorBlack, ui.ColorGreen),
+			image.Pt(clusternameX, s.Inner.Min.Y+(s.Inner.Dy()/2)),
+		)
 	}
 }
 
