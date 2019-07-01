@@ -16,7 +16,7 @@ See [https://github.com/ricoberger/kubetop/releases](https://github.com/ricoberg
 ```sh
 GOOS=$(go env GOOS)
 GOARCH=$(go env GOARCH)
-wget https://github.com/ricoberger/kubetop/releases/download/v1.1.0/kubetop-$GOOS-$GOARCH
+wget https://github.com/ricoberger/kubetop/releases/download/v1.1.1/kubetop-$GOOS-$GOARCH
 sudo install -m 755 kubetop-$GOOS-$GOARCH /usr/local/bin/kubetop
 ```
 
